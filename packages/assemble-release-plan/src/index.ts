@@ -176,36 +176,38 @@ function assembleReleasePlan(
     refinedConfig.ignore
   );
 
-  let dependencyGraph = getDependentsGraph(packages, {
-    bumpVersionsWithWorkspaceProtocolOnly:
-      refinedConfig.bumpVersionsWithWorkspaceProtocolOnly,
-  });
-
-  let releasesValidated = false;
-  while (releasesValidated === false) {
-    // The map passed in to determineDependents will be mutated
-    let dependentAdded = determineDependents({
-      releases,
-      packagesByName,
-      dependencyGraph,
-      preInfo,
-      config: refinedConfig,
+  if (refinedConfig.updateInternalDependencies !== "none") {
+    let dependencyGraph = getDependentsGraph(packages, {
+      bumpVersionsWithWorkspaceProtocolOnly:
+        refinedConfig.bumpVersionsWithWorkspaceProtocolOnly,
     });
 
-    // `releases` might get mutated here
-    let fixedConstraintUpdated = matchFixedConstraint(
-      releases,
-      packagesByName,
-      refinedConfig
-    );
-    let linksUpdated = applyLinks(
-      releases,
-      packagesByName,
-      refinedConfig.linked
-    );
+    let releasesValidated = false;
+    while (releasesValidated === false) {
+      // The map passed in to determineDependents will be mutated
+      let dependentAdded = determineDependents({
+        releases,
+        packagesByName,
+        dependencyGraph,
+        preInfo,
+        config: refinedConfig,
+      });
 
-    releasesValidated =
-      !linksUpdated && !dependentAdded && !fixedConstraintUpdated;
+      // `releases` might get mutated here
+      let fixedConstraintUpdated = matchFixedConstraint(
+        releases,
+        packagesByName,
+        refinedConfig
+      );
+      let linksUpdated = applyLinks(
+        releases,
+        packagesByName,
+        refinedConfig.linked
+      );
+
+      releasesValidated =
+        !linksUpdated && !dependentAdded && !fixedConstraintUpdated;
+    }
   }
 
   if (preInfo?.state.mode === "exit") {
